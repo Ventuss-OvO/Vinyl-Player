@@ -1,13 +1,4 @@
-/**
- * main.js
- * http://www.codrops.com
- *
- * Licensed under the MIT license.
- * http://www.opensource.org/licenses/mit-license.php
- * 
- * Copyright 2016, Codrops
- * http://www.codrops.com
- */
+
 ;(function(window) {
 
 	'use strict';
@@ -1649,16 +1640,13 @@
 	
 	/* UI */
 
-	// Grid, Single/Slideshow/ Player views.
+	// Single/Slideshow/ Player views - 移除了网格视图
 	var views = {
-			grid : document.querySelector('.view--grid'),
 			single : document.querySelector('.view--single'),
 			player : document.querySelector('.view--player')
 		},
-		// The initial grid element (if exists).
-		lpGrid = views.grid ? views.grid.querySelector('ul.grid') : null,
-		// The initial grid items (if grid exists).
-		lps = lpGrid ? [].slice.call(lpGrid.querySelectorAll('li.grid__item')) : [],
+		// 当前视图默认为播放器视图
+		currentView = views.player,
 		expanderEl = document.querySelector('.deco-expander'),
 		// The LP svg behing each Slideshow record
 		recordEl = views.player.querySelector('.player__element--lp'),
@@ -1671,8 +1659,6 @@
 	 */
 	function init() {
 		var onready = function() {
-			classie.add(lpGrid, 'grid--loaded');
-			
 			// 首先加载音乐库
 			loadMusicLibrary(function(err, library) {
 				if (err) {
@@ -1682,27 +1668,17 @@
 				
 				console.log('Music library loaded:', library);
 				
-				// 只在需要时才生成网格视图
-				if (views.grid && views.grid.querySelector('.grid')) {
-					generateGridView(library);
-				}
-				
 				// 只在需要时才生成详情视图
 				if (views.single) {
 					generateDetailView(library);
 				}
 				
-				// 只在网格视图存在时才初始化网格相关事件
-				if (lps && lps.length > 0) {
-					initEvents();
-				}
-				
 				// 只在详情视图存在时才初始化幻灯片
 				if (document.querySelector('.view--single')) {
 					slideshow = new RecordSlideshow(document.querySelector('.view--single'), {
-						// Stopping/Closing the slideshow: return to the initial grid.
+						// Stopping/Closing the slideshow: 直接返回播放器视图
 						onStop : function() {
-							changeView('single', 'grid');
+							changeView('single', 'player');
 							hideExpander();
 						},
 						onLoadRecord : function(record, progressEl, progressElLen) {
@@ -1763,6 +1739,9 @@
 					
 					// 设置唱片封面图片
 					var coverPath = 'music/' + firstAlbum.folder + '/' + firstAlbum.coverImage;
+					console.log('加载封面图片路径:', coverPath);
+					
+					// 设置播放器视图中的封面图片
 					var coverImage = recordEl.querySelector('image');
 					if (coverImage) {
 						coverImage.setAttribute('xlink:href', coverPath);
@@ -1780,8 +1759,9 @@
 							year: firstAlbum.year
 						});
 						
-						// 直接将首页设置为播放器视图
-						changeView('grid', 'player');
+						// 确保当前视图是播放器视图
+						classie.remove(views.player, 'view--hidden');
+						classie.add(views.player, 'view--current');
 						
 					}, function(progress) {
 						// 处理加载进度
@@ -1794,53 +1774,19 @@
 	}
 
 	/**
-	 * Preload turntable assets and optionally grid images. Initialize the turntable.
+	 * Preload turntable assets. Initialize the turntable.
 	 */
 	function preload(callback) {
-		var loaded = 0;
-		var totalToLoad = 1; // 默认只加载唱片机资源
-		
-		var checkLoaded = function() {
-			++loaded;
-			if(loaded === totalToLoad && typeof callback === 'function') {
-				callback();
-			}
-		};
-		
-		// 只在网格视图存在时才初始化Masonry
-		if (views.grid && lpGrid) {
-			totalToLoad++; // 增加需要加载的资源数量
-			initGridLayout(checkLoaded);
-		}
-		
 		// 加载唱片机资源（噪音和音效）
 		loadTurntableAssets(function(bufferList) {
 			initTurntable(bufferList);
-			checkLoaded();
+			if (typeof callback === 'function') {
+				callback();
+			}
 		});
 	}
 
-	/**
-	 * Call Masonry on the initial grid if it exists.
-	 */
-	function initGridLayout(callback) {
-		// 确保网格视图存在
-		if (!views.grid) {
-			if (typeof callback === 'function') {
-				callback();
-			}
-			return;
-		}
-		
-		imagesLoaded(views.grid, function() {
-			new Masonry('.grid', {
-				itemSelector: '.grid__item'
-			});
-			if (typeof callback === 'function') {
-				callback();
-			}
-		});
-	}
+	// 移除了initGridLayout函数，因为不再需要网格视图
 
 	function loadTurntableAssets(callback) {
 		new AbbeyLoad([{ 

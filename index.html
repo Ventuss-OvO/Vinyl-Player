@@ -4,10 +4,10 @@
 		<meta charset="UTF-8" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>Record Player | Codrops</title>
+		<title>Vinyl Player | Calm Delight</title>
 		<meta name="description" content="" />
 		<meta name="keywords" content="" />
-		<meta name="author" content="Codrops" />
+		<meta name="author" content="Ventuss" />
 		<link rel="shortcut icon" href="favicon.ico">
 		<link rel="stylesheet" type="text/css" href="css/normalize.css" />
 		<link rel="stylesheet" type="text/css" href="css/style.css" />
@@ -121,56 +121,6 @@
 			</defs>
 		</svg><!-- SVGs -->
 		<main>
-			<div class="view view--grid">
-				<header class="page-header">
-					<h1 class="page-header__title">Nusa Records</h1>
-					<p class="page-header__subtitle">Your classic record shop. Sell your old vinyls to us.</p>
-					<div class="codrops-links">
-						<a class="codrops-icon codrops-icon--prev" href="http://tympanus.net/Tutorials/PageRevealEffects/" title="Previous Demo"><svg class="icon icon--arrow"><use xlink:href="#icon-arrow"></use></svg></a>
-						<a class="codrops-icon codrops-icon--drop" href="http://tympanus.net/codrops/?p=27200" title="Back to the article"><svg class="icon icon--drop"><use xlink:href="#icon-drop"></use></svg></a>
-					</div>
-				</header>
-				<ul class="grid">
-					<li class="grid__item">
-						<a class="grid__link" href="#album-1">
-							<div class="img-wrap img-wrap--grid">
-								<svg class="lp lp--grid">
-									<use xlink:href="#icon-lp-mini"></use>
-								</svg>
-								<img class="img img--grid" src="img/album1.jpg" alt="album1" />
-							</div>
-							<span class="year">1999</span>
-							<h2 class="artist">Lena Glass</h2>
-							<h3 class="title">Blue Moments</h3>
-						</a>
-					</li>
-					<li class="grid__item grid__item--deco grid__item--deco-1">
-						<a class="grid__link" href="#album-2">
-							<div class="img-wrap img-wrap--grid">
-								<svg class="lp lp--grid">
-									<use xlink:href="#icon-lp-mini"></use>
-								</svg>
-								<img class="img img--grid" src="img/album2.jpg" alt="album2" />
-							</div>
-							<span class="year">1984</span>
-							<h2 class="artist">Peekaboo</h2>
-							<h3 class="title">Clear Nonsense</h3>
-						</a>
-					</li>
-				</ul>
-				<!-- Related demos -->
-				<section class="content content--related">
-					<h3 class="content__title">If you enjoyed this demo you might also like:</h3>
-					<a class="media-item" href="http://tympanus.net/Development/3DGridEffect/">
-						<img class="media-item__img" src="img/related/3dgrideffect.jpg">
-						<h3 class="media-item__title">3D Grid Effect</h3>
-					</a>
-					<a class="media-item" href="http://tympanus.net/Development/PhotographyWebsiteConcept/">
-						<img class="media-item__img" src="img/related/PhotographyWebsiteConcept.jpg">
-						<h3 class="media-item__title">Photography Website Concept</h3>
-					</a>
-				</section>
-			</div><!-- /view-grid -->
 			<div class="view view--player view--current">
 				<button class="control-button control-button--back" aria-label="Back to album slideshow">
 					<svg class="icon icon--arrow">
@@ -236,7 +186,8 @@
 										<path fill="#4bb749" d="M400,262.1c-76.1,0-137.9,61.7-137.9,137.9S323.9,537.9,400,537.9S537.9,476.1,537.9,400S476.1,262.1,400,262.1z M400,411.7c-6.4,0-11.7-5.2-11.7-11.7s5.2-11.7,11.7-11.7s11.7,5.2,11.7,11.7S406.4,411.7,400,411.7z" />
 									</clipPath>
 								</defs>
-								<image xlink:href="img/album11.jpg" x="250" y="250" height="300px" width="300px" clip-path="url(#coverClip)"/>
+								<!-- 使用空路径，将由JavaScript动态设置 -->
+								<image xlink:href="" x="250" y="250" height="300px" width="300px" clip-path="url(#coverClip)"/>
 								<text class="lp-side-label lp-side-label--a" transform="matrix(1 0 0 1 381.8867 509.8047)" style="opacity:0.2; font-family:'Arial'; font-size:50.4557px;">A</text>
 								<text class="lp-side-label lp-side-label--b" transform="matrix(-1 0 0 1 418.2188 509.8047)" style="opacity:0.2; font-family:'Arial'; font-size:50.4557px;">B</text>
 							</svg>
@@ -255,7 +206,8 @@
 			<div class="view view--single">
 				<div class="single" id="album-1">
 					<div class="img-wrap img-wrap--single">
-						<img class="img img--single" src="img/album1.jpg" alt="album1" />
+						<!-- 使用空路径，将由JavaScript动态设置 -->
+						<img class="img img--single" src="" alt="album1" />
 					</div>
 					<span class="number">01<span class="number__total">12</span></span>
 					<h2 class="artist artist--single">Lena Glass</h2>
@@ -264,7 +216,8 @@
 				</div>
 				<div class="single" id="album-2">
 					<div class="img-wrap img-wrap--single">
-						<img class="img img--single" src="img/album2.jpg" alt="album2" />
+						<!-- 使用空路径，将由JavaScript动态设置 -->
+						<img class="img img--single" src="" alt="album2" />
 					</div>
 					<span class="number">02<span class="number__total">12</span></span>
 					<h2 class="artist artist--single">Peekaboo</h2>

@@ -134,36 +134,7 @@ html.js,
 	color: #fff;
 }
 
-/* Codrops navigation */
 
-.codrops-links {
-	font-size: 0.75em;
-	position: relative;
-	display: inline-block;
-	margin: 2.5em 0 0 0;
-	text-align: center;
-	white-space: nowrap;
-}
-
-.codrops-links::after {
-	content: '';
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	width: 1px;
-	height: 100%;
-	background: #474283;
-	-webkit-transform: translateY(-50%) rotate3d(0, 0, 1, 22.5deg);
-	transform: translateY(-50%) rotate3d(0, 0, 1, 22.5deg);
-}
-
-.codrops-icon {
-	display: inline-block;
-	width: 1.5em;
-	margin: 0.25em 0.5em;
-	text-decoration: none;
-	pointer-events: auto;
-}
 
 @media screen and (max-width: 55em) {
 	.page-header {
