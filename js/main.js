@@ -178,6 +178,7 @@
 		};
 		// Controls
 		this.ctrls = {
+			// 返回按钮可能已移除，但播放视图中可能还有
 			back : this.el.querySelector('.control-button--back'),
 			play : this.el.querySelector('.player__controls > button.player-button--playstop'),
 			playStatus : this.el.querySelector('.player__controls > button.player-button--playstop .icon--play'),
@@ -1290,9 +1291,11 @@
 
 		// Controls.
 		// Back to the Slideshow/Single view
-		this.ctrls.back.addEventListener('click', function() {
-			self._ctrlBack();
-		});
+		if (this.ctrls.back) {
+			this.ctrls.back.addEventListener('click', function() {
+				self._ctrlBack();
+			});
+		}
 
 		// Play/Stop turntable.
 		this.ctrls.play.addEventListener('click', function() {
@@ -1450,8 +1453,8 @@
 		this.ctrls = {
 			next : this.el.querySelector('.controls__navigate > button.control-button--next'),
 			prev : this.el.querySelector('.controls__navigate > button.control-button--prev'),
-			play : this.el.querySelector('button.control-button--play'),
-			back : this.el.querySelector('button.control-button--back')
+			play : this.el.querySelector('button.control-button--play')
+			// 返回按钮已移除
 		};
 
 		this.lpPlayCtrlPath = this.ctrls.play.querySelector('svg.icon--progress > path');
@@ -1503,18 +1506,26 @@
 	 */
 	RecordSlideshow.prototype._initEvents = function() {
 		var self = this;
-		this.ctrls.next.addEventListener('click', function() {
-			self._navigate('right');
-		});
-		this.ctrls.prev.addEventListener('click', function() {
-			self._navigate('left');
-		});
-		this.ctrls.back.addEventListener('click', function() {
-			self._stop();
-		});
-		this.ctrls.play.addEventListener('click', function() {
-			self._loadRecord();
-		});
+		// 确保元素存在再添加事件监听
+		if (this.ctrls.next) {
+			this.ctrls.next.addEventListener('click', function() {
+				self._navigate('right');
+			});
+		}
+		
+		if (this.ctrls.prev) {
+			this.ctrls.prev.addEventListener('click', function() {
+				self._navigate('left');
+			});
+		}
+		
+		// 返回按钮已移除，不再添加事件监听
+		
+		if (this.ctrls.play) {
+			this.ctrls.play.addEventListener('click', function() {
+				self._loadRecord();
+			});
+		}
 	};
 
 	/**
@@ -2011,10 +2022,10 @@
 		var controlsElement = singleContainer.querySelector('.controls');
 		if (!controlsElement) return;
 		
-		// 清空原有单曲元素(保留控制区域)
+		// 清空原有单曲元素(只保留控制区域)
 		var children = [].slice.call(singleContainer.children);
 		children.forEach(function(child) {
-			if (!child.classList.contains('controls') && !child.classList.contains('control-button--back')) {
+			if (!child.classList.contains('controls')) {
 				singleContainer.removeChild(child);
 			}
 		});

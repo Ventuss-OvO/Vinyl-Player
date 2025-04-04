@@ -1112,6 +1112,7 @@ we use margins because transforms will be applied dynamically */
 
 }
 
+/* 歌曲列表样式 */
 .player-tracklist {
 	position: absolute;
 	top: 240px;
@@ -1121,6 +1122,13 @@ we use margins because transforms will be applied dynamically */
 	overflow-y: auto;
 	color: #fff;
 	z-index: 1;
+	/* 默认隐藏，只在播放视图中显示 */
+	display: none;
+}
+
+/* 只在播放视图中显示歌曲列表 */
+.view--player.view--current .player-tracklist {
+	display: block;
 }
 
 .tracklist-title {
