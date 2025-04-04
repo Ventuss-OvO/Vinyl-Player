@@ -308,34 +308,20 @@
 				_side.totalDuration += _side.bufferList['buffer' + (i+1)].duration;
 			}
 
-			// 初始化播放状态为第一首歌的开始位置
+			// 当前缓冲区(播放中或待播放)
 			self.currentBuffer = 1;
-			self.currentSong = 0;
+			self.currentSong = 0; // 添加对当前歌曲的跟踪
 			self.currentSide = 1;
-			self.isReady = true; // 播放器已准备好
-			self.isPlaying = false; // 默认不自动播放
-			
-			// 初始化暂停状态
-			self.pausedTime = 0; // 记录时间点为00:00
-			self.pausedBuffer = 1; // 记录歌曲为第一首
-			
-			// 设置唱臂位置到初始位置
-			self.setArmPos(0);
-			
+			self.isReady = true;
+
 			// 加载封面图片
 			self.updateCoverImage(album);
-			
-			// 更新专辑信息
-			self.updateAlbumInfo(album);
 			
 			// 更新曲目列表
 			self.updateTracklist(album);
 			
 			// 确保初始的track显示正确
 			self.updateTrackDisplay(0, album.songs.length);
-			
-			// 设置初始活动曲目
-			self.updateTracklistActiveItem(0);
 			
 			if (callback) callback();
 		}, onProgress);
@@ -406,11 +392,11 @@
 						}
 						this.classList.add('active');
 						
-						// 选中新曲目并立即开始播放
+						// 加载并播放选中的曲目
 						self.changeSong(trackIndex);
-					} else if (!self.isPlaying) {
-						// 如果点击当前播放的曲目但未播放，则开始播放
-						self.start();
+						
+						// 更新右上角显示的曲目信息
+						self.updateTrackDisplay(trackIndex, album.songs.length);
 					}
 				});
 				
@@ -464,24 +450,18 @@
 		}
 		
 		// 停止当前播放的音乐
-		if (this.isPlaying) {
-			// 不使用stop()方法，因为我们需要切换而不是完全停止
-			if (this.source) {
-				this.source.onended = null; // 防止触发ended事件
-				this.source.stop(0);
-			}
+		if (this.isPlaying || this.isPaused) {
+			this.stop();
 		}
-		
-		// 重置暂停状态
-		this.isPaused = false;
-		this.pausedTime = 0; // 从头开始播放新歌曲
 		
 		// 更新当前曲目索引
 		this.currentSong = index;
 		this.currentBuffer = index + 1; // bufferKey是从1开始的
 		
-		console.log('设置唱臂位置, progress:', this.currentSong / (this.recordData.side1.totalBuffers-1));
+		// 更新曲目列表中的活动状态
+		this._updateTracklistActiveState(this.currentSong);
 		
+		console.log('设置唱臂位置, progress:', this.currentSong / (this.recordData.side1.totalBuffers-1));
 		// 更新唱臂位置，使用归一化的进度值
 		var progress = 0;
 		if (this.recordData.side1.totalBuffers > 1) {
@@ -492,16 +472,14 @@
 		// 更新右上角显示的曲目信息（01/06格式）
 		this.updateTrackDisplay(index, this.recordData.side1.totalBuffers);
 		
-		// 更新曲目列表中的活动项
-		this.updateTracklistActiveItem(index);
+		// 重置暂停相关状态
+		this.pausedTime = undefined;
+		this.pausedBuffer = undefined;
+		this.pausedArmRotation = undefined;
 		
-		// 立即开始播放新曲目
-		this.isPlaying = true;
-		this._play();
-		this._operate();
-		
-		// 更新UI状态
-		this._ctrlPlay('play');
+		// 立即开始播放选中的曲目
+		console.log('立即开始播放选中的曲目');
+		this.start();
 	};
 
 	/**
@@ -517,35 +495,48 @@
 		// 每次点击按钮时播放临时噪音效果
 		this._playTemporaryNoise();
 		
-		// 记录当前状态以便调试
+		// 详细记录当前状态，帮助调试
 		console.log('详细状态检查:', {
 			isPaused: this.isPaused,
 			pausedTime: this.pausedTime,
 			pausedBuffer: this.pausedBuffer,
 			pausedArmRotation: this.pausedArmRotation,
 			currentBuffer: this.currentBuffer,
+			currentSong: this.currentSong,
 			isPlaying: this.isPlaying
 		});
-
-		// 设置播放状态
-		this.isPlaying = true;
-		this.isPaused = false;
 		
-		// 如果已经暂停，则从记录的位置恢复播放（不改变当前歌曲和时间点）
-		if (this.pausedTime !== undefined && this.pausedBuffer !== undefined) {
-			console.log('从记录的位置恢复播放');
-			// 从暂停的位置恢复播放当前歌曲
-			this._playFromPausedPosition();
-		} else {
-			console.log('开始新的播放');
-			// 否则开始新的播放
-			// Play all the buffers/tracks.
-			this._play();
-			// Extra turntable stuff (noise, arm and platter rotations)
-			this._operate();
+		// 如果已经在播放，不做任何操作
+		if (this.isPlaying) {
+			console.log('已经在播放中，不需要再次开始');
+			return;
 		}
 		
-		// 控制播放/停止UI状态
+		// 如果已经暂停，则从暂停位置恢复播放
+		if (this.isPaused && this.pausedTime !== undefined && this.pausedBuffer !== undefined) {
+			console.log('检测到有效的暂停状态，从暂停位置恢复播放');
+			this.isPaused = false;
+			this.isPlaying = true;
+			// 从暂停的位置恢复播放当前歌曲
+			this._playFromPausedPosition();
+			// 控制播放/停止UI状态
+			this._ctrlPlay('play');
+			return;
+		}
+
+		console.log('开始新的播放');
+		// 否则开始新的播放
+		this.isPlaying = true;
+		this.isPaused = false;
+		// 重置暂停相关状态
+		this.pausedTime = undefined;
+		this.pausedBuffer = undefined;
+		this.pausedArmRotation = undefined;
+		// Play all the buffers/tracks.
+		this._play();
+		// Extra turntable stuff (noise, arm and platter rotations)
+		this._operate();
+		// Control the play/stop ctrls status.
 		this._ctrlPlay('play');
 	};
 
@@ -561,11 +552,11 @@
 		// 每次点击按钮时播放临时噪音效果
 		this._playTemporaryNoise();
 		
-		// 记录暂停位置（保持当前歌曲和时间点不变）
+		// 记录暂停位置
 		this.pausedTime = this.audioCtx.currentTime - this.startTime;
 		this.pausedBuffer = this.currentBuffer;
 		
-		// 记录唱臂当前的角度，用于恢复播放时继续
+		// 非常重要：记录唱臂当前的角度，用于恢复播放时继续
 		this.pausedArmRotation = this.armRotation;
 		
 		console.log('记录暂停位置:', this.pausedTime, '当前缓冲区:', this.pausedBuffer, '唱臂角度:', this.pausedArmRotation);
@@ -643,15 +634,31 @@
 			
 			// 当前缓冲区播放完成后，跳转到下一个缓冲区
 			this.sourceEnded = function() {
-				console.log('音频源播放结束事件触发');
-				if (self.isDragging) return;
-				if (self.currentBuffer < self._getCurrentSide().totalBuffers && self.isPlatterRotating) {
+				// If isDragging is true it means the User lifted the tonearm.
+				if( self.isDragging ) return;
+				
+				// 判断是否是歌曲列表中的最后一首歌
+				var isLastTrack = self.currentBuffer >= self._getCurrentSide().totalBuffers;
+				
+				if( !isLastTrack && self.isPlatterRotating ) { 
+					// 不是最后一首歌，继续播放下一首
+					console.log('播放下一首歌:', self.currentBuffer + 1);
+					// Update current buffer and stop the current source.
 					self.source.stop(0);
 					self.currentBuffer++;
-					self.pausedTime = 0; // 重置暂停时间
+					// Recursive..
 					self._play();
-				} else {
-					self.stop();
+				}
+				else {
+					// 是最后一首歌，才加载下一张专辑
+					if (isLastTrack) {
+						console.log('当前是最后一首歌，加载下一张专辑');
+						self.loadNextAlbum();
+					} else {
+						// 其他情况（如唱盘停止旋转），直接停止播放
+						console.log('播放停止');
+						self.stop();
+					}
 				}
 			};
 			this.source.onended = this.sourceEnded;
@@ -760,8 +767,11 @@
 		var totalTracks = this._getCurrentSide().totalBuffers;
 		this.updateTrackDisplay(currentTrackIndex, totalTracks);
 		
-		// 更新曲目列表中的活动项
-		this.updateTracklistActiveItem(currentTrackIndex);
+		// 保存当前歌曲索引，用于曲目列表高亮和播放记录
+		this.currentSong = currentTrackIndex;
+		
+		// 更新曲目列表中的活动状态
+		this._updateTracklistActiveState(this.currentSong);
 		
 		// Set up the room effect and the right audio nodes´ connections.
 		this.setEffect();
@@ -789,17 +799,35 @@
 				// Update current buffer and stop the current source.
 				self.source.stop(0);
 				self.currentBuffer++;
-				self.currentSong = self.currentBuffer - 1; // 更新当前歌曲索引
 				// Recursive..
 				self._play();
 			}
 			else {
-				// Stop everything..
-				self.stop();
+				// 已经是最后一首歌，加载下一张专辑
+				self.loadNextAlbum();
 			}
 		};
 		//this.source.addEventListener('ended', this.sourceEnded);
 		this.source.onended = this.sourceEnded;
+	};
+
+	/**
+	 * 更新曲目列表中的活动状态
+	 */
+	Turntable.prototype._updateTracklistActiveState = function(activeIndex) {
+		if (!this.ui.tracklist) return;
+		
+		// 移除所有活动状态
+		var allItems = this.ui.tracklist.querySelectorAll('.tracklist-item');
+		for (var i = 0; i < allItems.length; i++) {
+			allItems[i].classList.remove('active');
+		}
+		
+		// 为当前活动曲目添加活动状态
+		var activeItem = this.ui.tracklist.querySelector('.tracklist-item[data-track="' + activeIndex + '"]');
+		if (activeItem) {
+			activeItem.classList.add('active');
+		}
 	};
 
 	/**
@@ -937,10 +965,10 @@
 		this.isPlaying = false;
 		this.isPaused = false;
 		
-		// 不清除暂停相关的变量，保留当前歌曲和时间点记录
-		// this.pausedTime 保持不变
-		// this.pausedBuffer 保持不变
-		// this.pausedArmRotation 保持不变
+		// 清除暂停相关的变量
+		this.pausedTime = undefined;
+		this.pausedBuffer = undefined;
+		this.pausedArmRotation = undefined;
 		
 		// Clear any timeout if any.
 		if( this.armtimeout ) {
@@ -953,9 +981,11 @@
 			return;
 		}
 		
-		console.log('停止音频源和重置UI状态');
+		console.log('停止音频源和重置状态');
 		this.source.removeEventListener('ended', this.sourceEnded);
 		this.source.stop(0);
+		// Reset current buffer idx.
+		this.currentBuffer = 1;
 
 		this._stopNoise();
 		this._stopAnalysing();
@@ -1298,10 +1328,8 @@
 		this.ctrls.play.addEventListener('click', function() {
 			console.log('播放按钮点击事件触发 (原始事件), 当前状态:', self.isPlaying ? '播放中' : (self.isPaused ? '已暂停' : '已停止'));
 			if (self.isPlaying) {
-				// 如果当前正在播放，则暂停，但保持记录的歌曲和时间点
 				self.pause();
 			} else {
-				// 如果当前暂停或停止，则从当前记录的歌曲和时间点开始播放
 				self.start();
 			}
 		});
@@ -1875,8 +1903,25 @@
 			isPlaying: turntable.isPlaying,
 			isPaused: turntable.isPaused,
 			isReady: turntable.isReady,
+			
 			noiseVal: turntable.noiseVal,
 			currentSide: turntable.currentSide
+		});
+		
+		// 加载音乐库后自动加载第一张专辑，但不自动播放
+		loadMusicLibrary(function(err) {
+			if (err) {
+				console.error('加载音乐库失败:', err);
+				return;
+			}
+			
+			// 确保音乐库有专辑
+			if (musicLibrary && musicLibrary.albums && musicLibrary.albums.length > 0) {
+				// 加载第一张专辑
+				turntable.loadRecord(musicLibrary.albums[0].id, function() {
+					console.log('初始专辑加载完成，等待用户点击播放');
+				});
+			}
 		});
 	}
 
@@ -2082,33 +2127,57 @@
 	};
 
 	/**
-	 * 更新播放器UI中的专辑信息
+	 * 加载下一张专辑
 	 */
-	Turntable.prototype.updateAlbumInfo = function(album) {
-		// 更新专辑信息
-		this.infoElems.title.textContent = album.title; // 第一行显示专辑名称
-		this.infoElems.artist.textContent = album.artist; // 第二行显示歌手名
-		this.infoElems.year.textContent = album.year;
-	};
+	Turntable.prototype.loadNextAlbum = function() {
+		console.log('加载下一张专辑');
+		if (!musicLibrary || !musicLibrary.albums || !musicLibrary.albums.length) {
+			console.error('音乐库未加载或为空');
+			return;
+		}
 
-	/**
-	 * 更新曲目列表中的当前活动项
-	 */
-	Turntable.prototype.updateTracklistActiveItem = function(activeIndex) {
-		// 确保tracklist元素存在
-		if (!this.ui.tracklist) return;
-		
-		// 移除所有active状态
-		var allItems = this.ui.tracklist.querySelectorAll('.tracklist-item');
-		for (var i = 0; i < allItems.length; i++) {
-			allItems[i].classList.remove('active');
+		// 获取当前专辑ID
+		var currentAlbumId = null;
+		if (this.recordData && this.recordData.artist && this.recordData.title) {
+			// 根据当前recordData中的信息查找专辑ID
+			musicLibrary.albums.forEach(function(album) {
+				if (album.artist === this.recordData.artist && album.title === this.recordData.title) {
+					currentAlbumId = album.id;
+				}
+			}, this);
 		}
-		
-		// 添加active状态到当前曲目
-		var activeItem = this.ui.tracklist.querySelector('.tracklist-item[data-track="' + activeIndex + '"]');
-		if (activeItem) {
-			activeItem.classList.add('active');
+
+		if (!currentAlbumId) {
+			// 如果找不到当前专辑，则加载第一张专辑
+			this.loadRecord(musicLibrary.albums[0].id, function() {
+				// 自动开始播放
+				this.start();
+			}.bind(this));
+			return;
 		}
+
+		// 找到当前专辑在数组中的索引
+		var currentIndex = -1;
+		for (var i = 0; i < musicLibrary.albums.length; i++) {
+			if (musicLibrary.albums[i].id === currentAlbumId) {
+				currentIndex = i;
+				break;
+			}
+		}
+
+		if (currentIndex === -1) {
+			console.error('未找到当前专辑索引');
+			return;
+		}
+
+		// 计算下一张专辑的索引
+		var nextIndex = (currentIndex + 1) % musicLibrary.albums.length;
+		
+		// 加载下一张专辑
+		this.loadRecord(musicLibrary.albums[nextIndex].id, function() {
+			// 自动开始播放
+			this.start();
+		}.bind(this));
 	};
 
 })(window);

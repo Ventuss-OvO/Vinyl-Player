@@ -1,0 +1,86 @@
+{
+  "albums": [
+    {
+      "id": "album-1",
+      "folder": "lena_glass_blue_moments",
+      "artist": "Lena Glass",
+      "title": "Blue Moments",
+      "year": "1999",
+      "coverImage": "cover.jpg",
+      "tracks": 6,
+      "songs": [
+        {
+          "file": "Stolen_Dreams_Backing_Track.mp3",
+          "title": "Stolen Dreams",
+          "track": 1
+        },
+        {
+          "file": "Dream_On_This_Side.mp3",
+          "title": "Dream On This Side",
+          "track": 2
+        },
+        {
+          "file": "Beautiful_Paranoia.mp3",
+          "title": "Beautiful Paranoia",
+          "track": 3
+        },
+        {
+          "file": "Rock_On.mp3",
+          "title": "Rock On",
+          "track": 4
+        },
+        {
+          "file": "Old_Man_and_the_Sea_II.mp3",
+          "title": "Old Man and the Sea II",
+          "track": 5
+        },
+        {
+          "file": "Dawn's_Battle.mp3",
+          "title": "Dawn's Battle",
+          "track": 6
+        }
+      ]
+    },
+    {
+      "id": "album-2",
+      "folder": "peekaboo_clear_nonsense",
+      "artist": "Peekaboo",
+      "title": "Clear Nonsense",
+      "year": "1984",
+      "coverImage": "cover.jpg",
+      "tracks": 6,
+      "songs": [
+        {
+          "file": "Beyond_Jupiter.mp3",
+          "title": "Beyond Jupiter",
+          "track": 1
+        },
+        {
+          "file": "To_Free_Me.mp3",
+          "title": "To Free Me",
+          "track": 2
+        },
+        {
+          "file": "Caves_of_Steel.mp3",
+          "title": "Caves of Steel",
+          "track": 3
+        },
+        {
+          "file": "Luna's_Little_Friend.mp3",
+          "title": "Luna's Little Friend",
+          "track": 4
+        },
+        {
+          "file": "Stolen_Dreams_Backing_Track.mp3",
+          "title": "Stolen Dreams",
+          "track": 5
+        },
+        {
+          "file": "Dream_On_This_Side.mp3",
+          "title": "Dream On This Side",
+          "track": 6
+        }
+      ]
+    }
+  ]
+} 

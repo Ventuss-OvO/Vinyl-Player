@@ -30,6 +30,14 @@ Follow Codrops: [Twitter](http://www.twitter.com/codrops), [Facebook](http://www
 
 [© Codrops 2016](http://www.codrops.com)
 
+## Recent Changes
+
+The interface has been simplified:
+- The main page is now the vinyl player view instead of the album grid
+- The first album is automatically loaded in the player on page load, but doesn't autoplay
+- The back button in the player view returns directly to the grid view
+- The player can be started by clicking the play button
+
 
 
 

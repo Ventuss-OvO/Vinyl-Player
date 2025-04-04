@@ -677,13 +677,37 @@ html.js,
 }
 
 .control-button--back {
-	font-size: 3vmin;
-	position: fixed;
-	top: 2vmin;
-	left: 3vmin;
+	font-size: 1em;
+	position: absolute;
+	bottom: 50px;
+	left: 120px;
 	color: #fff;
-	-webkit-transition: opacity 0.3s;
-	transition: opacity 0.3s;
+	display: flex;
+	align-items: center;
+	transition: opacity 0.3s, color 0.3s;
+	padding: 5px 5px;
+	border-radius: 4px;
+	z-index: 10;
+}
+
+.control-button--back::after {
+	content: 'all';
+	margin-left: 10px;
+	font-size: 1em;
+	font-family: 'Lucida Sans Typewriter', 'Lucida Console', monaco, 'Bitstream Vera Sans Mono', monospace;
+}
+
+.control-button--back:hover {
+	color: #fff;
+	background-color: rgba(255, 255, 255, 0.15);
+}
+
+@media screen and (max-aspect-ratio: 100/75) {
+	.control-button--back {
+		font-size: 1.5em;
+		bottom: 4vmin;
+		left: 1em;
+	}
 }
 
 
@@ -726,8 +750,11 @@ html.js,
 }
 
 .view--player.view--current .control-button--back {
-	-webkit-transition-delay: 0.5s;
+	opacity: 1;
 	transition-delay: 0.5s;
+	position: absolute;
+	bottom: 6vmin;
+	left: 100px;
 }
 
 .player-stand {
@@ -738,8 +765,8 @@ html.js,
 	height: 90vmin;
 	border-radius: 0.15em;
 	background: #45bd94;
-	-webkit-transform: translate3d(-50%, -50%, 0) translate3d(calc(0.06 * 80vmin), 0, 0);
-	transform: translate3d(-50%, -50%, 0) translate3d(calc(0.06 * 80vmin), 0, 0);
+	-webkit-transform: translate3d(-50%, -50%, 0) translate3d(calc(0.06 * 80vmin + 150px), 0, 0);
+	transform: translate3d(-50%, -50%, 0) translate3d(calc(0.06 * 80vmin + 150px), 0, 0);
 	pointer-events: none;
 }
 
@@ -763,10 +790,12 @@ html.js,
 
 .player-info {
 	position: absolute;
-	z-index: 100;
-	max-width: 50vw;
-	padding: 9vmin 0 0 9vmin;
-	pointer-events: none;
+	top: 70px;
+	left: 100px;
+	width: 250px;
+	max-width: 30%;
+	color: #fff;
+	z-index: 1;
 }
 
 .year--player,
@@ -779,24 +808,25 @@ html.js,
 	font-family: 'nexa_boldregular', sans-serif;
 }
 
-.artist--player {
-	font-size: 8vmin;
-	line-height: 0.8;
-	margin: 0 0 0.25em 0;
+.title--player {
+	font-size: 5vmin;
+	line-height: 1;
+	margin: 0 0 0.5em 0;
 	white-space: nowrap;
 }
 
-.title--player {
+.artist--player {
 	font-size: 3vmin;
 	font-weight: normal;
-	margin: 0.25em 0 0;
+	margin: 0 0 0.8em 0;
+	color: rgba(255, 255, 255, 0.9);
 }
 
 .year--player {
 	font-size: 2vmin;
 	position: relative;
 	display: inline-block;
-	margin: 1em 0;
+	margin: 0.5em 0 1.5em;
 	border-width: 0.25vmin;
 }
 
@@ -810,7 +840,7 @@ html.js,
 .player__element {
 	position: absolute;
 	top: 50%;
-	left: 50%;
+	left: calc(50% + 150px);
 	width: 80vmin;
 	height: 80vmin;
 	margin: -40vmin 0 0 -40vmin;
@@ -933,15 +963,16 @@ we use margins because transforms will be applied dynamically */
 .player__controls {
 	position: absolute;
 	bottom: 0;
-	left: 0;
+	left: 150px;
 	display: -webkit-box;
 	display: -ms-flexbox;
+	display: -webkit-flex;
 	display: flex;
-	-webkit-box-pack: justify;
-	-ms-flex-pack: justify;
-	-webkit-justify-content: space-between;
-	justify-content: space-between;
-	width: 100%;
+	-webkit-box-pack: end;
+	-ms-flex-pack: end;
+	-webkit-justify-content: flex-end;
+	justify-content: flex-end;
+	width: calc(100% - 150px);
 	padding: 4vmin;
 }
 
@@ -973,9 +1004,7 @@ we use margins because transforms will be applied dynamically */
 	top: 10vmin;
 	right: 0;
 	bottom: 5vmin;
-	display: -webkit-box;
-	display: -ms-flexbox;
-	display: flex;
+	display: none;
 	-ms-flex-direction: column;
 	flex-direction: column;
 	-ms-flex-align: end;
@@ -990,10 +1019,11 @@ we use margins because transforms will be applied dynamically */
 	margin: 0.5em 0 0;
 	padding: 1em 0 0;
 	border-top: 1px solid #379676;
+	display: none;
 }
 
 .effects__button {
-	display: block;
+	display: none;
 	-ms-flex: none;
 	flex: none;
 	width: 100%;
@@ -1080,4 +1110,78 @@ we use margins because transforms will be applied dynamically */
 		padding: 15vmin 1em 0 1em;
 	}
 
+}
+
+.player-tracklist {
+	position: absolute;
+	top: 240px;
+	left: 90px;
+	width: 250px;
+	max-height: 500px;
+	overflow-y: auto;
+	color: #fff;
+	z-index: 1;
+}
+
+.tracklist-title {
+	display: none;
+}
+
+.tracklist-items {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.tracklist-item {
+	display: flex;
+	align-items: center;
+	padding: 8px 0;
+	cursor: pointer;
+	transition: color 0.2s ease;
+	border-radius: 0;
+	padding-left: 10px;
+}
+
+.tracklist-item:hover {
+	color: rgba(255, 255, 255, 0.8);
+}
+
+.tracklist-item.active {
+	background-color: rgba(255, 255, 255, 0.15);
+	font-weight: bold;
+	transform: none;
+	box-shadow: none;
+}
+
+.tracklist-number {
+	flex: 0 0 30px;
+	font-size: 14px;
+	text-align: center;
+	color: rgba(255, 255, 255, 0.7);
+}
+
+.tracklist-title-text {
+	flex: 1;
+	font-size: 14px;
+	padding-left: 10px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+@media screen and (max-width: 768px) {
+	.player-tracklist {
+		position: relative;
+		top: auto;
+		left: auto;
+		width: 100%;
+		max-width: 400px;
+		margin: 0 auto 20px;
+	}
+	.view--player.view--current .control-button--back {
+		bottom: 20px;
+		left: 20px;
+		font-size: 1.2em;
+	}
 }
