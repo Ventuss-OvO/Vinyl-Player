@@ -1072,27 +1072,20 @@
 	};
 
 	/**
-	 * Set up the room effect and the right audio nodes´ connections.
+	 * 设置音频处理链路连接
+	 * 注意：room音效已移除，此函数已简化为只处理无效果的情况
 	 */
 	Turntable.prototype.setEffect = function(idx) {
-		this.effect = idx != undefined ? idx : this.effect;
+		// 始终设置为-1表示无效果（room音效已移除）
+		this.effect = -1;
 
 		if( !this.source ) { return; }
 		
-		if( this.effect === -1 ) { // No effect.
-			// readjust the nodes´ connections.
-			this.source.disconnect();
-			this.convolver.disconnect();
-			this.source.connect(this.analyser);
-			this.analyser.connect(this.speakers);
-		}
-		else {
-			// Set up the Convolver buffer and adjust the nodes´ connections.
-			this.convolver.buffer = this.options.effectBuffers[this.effect];
-			this.source.connect(this.analyser);
-			this.analyser.connect(this.convolver);
-			this.convolver.connect(this.speakers);
-		}
+		// 重新调整音频节点连接
+		this.source.disconnect();
+		if(this.convolver) this.convolver.disconnect();
+		this.source.connect(this.analyser);
+		this.analyser.connect(this.speakers);
 	};
 
 	/**
@@ -1662,10 +1655,10 @@
 			single : document.querySelector('.view--single'),
 			player : document.querySelector('.view--player')
 		},
-		// The initial grid element.
-		lpGrid = views.grid.querySelector('ul.grid'),
-		// The initial grid items.
-		lps = [].slice.call(lpGrid.querySelectorAll('li.grid__item')),
+		// The initial grid element (if exists).
+		lpGrid = views.grid ? views.grid.querySelector('ul.grid') : null,
+		// The initial grid items (if grid exists).
+		lps = lpGrid ? [].slice.call(lpGrid.querySelectorAll('li.grid__item')) : [],
 		expanderEl = document.querySelector('.deco-expander'),
 		// The LP svg behing each Slideshow record
 		recordEl = views.player.querySelector('.player__element--lp'),
@@ -1689,65 +1682,72 @@
 				
 				console.log('Music library loaded:', library);
 				
-				// 动态生成网格视图
-				generateGridView(library);
+				// 只在需要时才生成网格视图
+				if (views.grid && views.grid.querySelector('.grid')) {
+					generateGridView(library);
+				}
 				
-				// 动态生成详情视图内容
-				generateDetailView(library);
+				// 只在需要时才生成详情视图
+				if (views.single) {
+					generateDetailView(library);
+				}
 				
-				// 初始化事件
-				initEvents();
+				// 只在网格视图存在时才初始化网格相关事件
+				if (lps && lps.length > 0) {
+					initEvents();
+				}
 				
-				// Initialize slideshow.
-				slideshow = new RecordSlideshow(document.querySelector('.view--single'), {
-					// Stopping/Closing the slideshow: return to the initial grid.
-					onStop : function() {
-						changeView('single', 'grid');
-						hideExpander();
-					},
-					onLoadRecord : function(record, progressEl, progressElLen) {
-						// 使用专辑ID从音乐库加载唱片
-						var albumId = record.albumId;
-						console.log('Loading album by ID:', albumId);
-						
-						// Load the record info into the turntable.
-						turntable.loadRecord(albumId, function() {
+				// 只在详情视图存在时才初始化幻灯片
+				if (document.querySelector('.view--single')) {
+					slideshow = new RecordSlideshow(document.querySelector('.view--single'), {
+						// Stopping/Closing the slideshow: return to the initial grid.
+						onStop : function() {
+							changeView('single', 'grid');
+							hideExpander();
+						},
+						onLoadRecord : function(record, progressEl, progressElLen) {
+							// 使用专辑ID从音乐库加载唱片
+							var albumId = record.albumId;
+							console.log('Loading album by ID:', albumId);
+							
+							// Load the record info into the turntable.
+							turntable.loadRecord(albumId, function() {
+								// 获取专辑信息
+								var album = getAlbumById(albumId);
+								if (album) {
+									// 更新唱片机上的信息
+									turntable.setRecordInfo({
+										artist: album.artist,
+										title: album.title,
+										year: album.year
+									});
+								}
+								setTimeout(function() { slideshow._showRecord(); }, 50);
+							}, function(progress) {
+								if (slideshow.isLoading) {
+									dynamics.animate(progressEl, {strokeDashoffset : progressElLen * (1 - progress/100)}, {duration : 100, type : dynamics.linear});
+								}
+							});
+						},
+						onShowRecord : function(record) {
 							// 获取专辑信息
-							var album = getAlbumById(albumId);
-							if (album) {
-								// 更新唱片机上的信息
-								turntable.setRecordInfo({
-									artist: album.artist,
-									title: album.title,
-									year: album.year
-								});
-							}
-							setTimeout(function() { slideshow._showRecord(); }, 50);
-						}, function(progress) {
-							if (slideshow.isLoading) {
-								dynamics.animate(progressEl, {strokeDashoffset : progressElLen * (1 - progress/100)}, {duration : 100, type : dynamics.linear});
-							}
-						});
-					},
-					onShowRecord : function(record) {
-						// 获取专辑信息
-						var album = getAlbumById(record.albumId);
-						if (!album) return;
-						
-						// 构建封面图片路径
-						var coverPath = 'music/' + album.folder + '/' + album.coverImage;
-						
-						// Show record element.
-						dynamics.css(recordEl, { opacity : 1 });
-						// Change the cover of the record.
-						recordEl.querySelector('image').setAttribute('xlink:href', coverPath);
-						// Change view.
-						changeView('single', 'player');
-						// 从单曲视图进入播放器视图，设置标志为false
-						isDirectLoaded = false;
-					}
-				});
-				
+							var album = getAlbumById(record.albumId);
+							if (!album) return;
+							
+							// 构建封面图片路径
+							var coverPath = 'music/' + album.folder + '/' + album.coverImage;
+							
+							// Show record element.
+							dynamics.css(recordEl, { opacity : 1 });
+							// Change the cover of the record.
+							recordEl.querySelector('image').setAttribute('xlink:href', coverPath);
+							// Change view.
+							changeView('single', 'player');
+							// 从单曲视图进入播放器视图，设置标志为false
+							isDirectLoaded = false;
+						}
+					});
+				}
 				// 加载第一张专辑
 				if (musicLibrary && musicLibrary.albums && musicLibrary.albums.length > 0) {
 					var firstAlbum = musicLibrary.albums[0];
@@ -1779,6 +1779,10 @@
 							title: firstAlbum.title,
 							year: firstAlbum.year
 						});
+						
+						// 直接将首页设置为播放器视图
+						changeView('grid', 'player');
+						
 					}, function(progress) {
 						// 处理加载进度
 						console.log("加载进度: " + progress + "%");
@@ -1790,20 +1794,26 @@
 	}
 
 	/**
-	 * Preload grid images and some turntable assets. Initialize the turntable.
+	 * Preload turntable assets and optionally grid images. Initialize the turntable.
 	 */
 	function preload(callback) {
-		var loaded = 0,
-			checkLoaded = function() {
-				++loaded;
-				if( loaded === 2 && typeof callback === 'function' ) {
-					callback();
-				}
-			};
+		var loaded = 0;
+		var totalToLoad = 1; // 默认只加载唱片机资源
 		
-		// Initialize Masonry after all images are loaded.
-		initGridLayout(checkLoaded);
-		// Load the turntable assets (noise and effects sounds).
+		var checkLoaded = function() {
+			++loaded;
+			if(loaded === totalToLoad && typeof callback === 'function') {
+				callback();
+			}
+		};
+		
+		// 只在网格视图存在时才初始化Masonry
+		if (views.grid && lpGrid) {
+			totalToLoad++; // 增加需要加载的资源数量
+			initGridLayout(checkLoaded);
+		}
+		
+		// 加载唱片机资源（噪音和音效）
 		loadTurntableAssets(function(bufferList) {
 			initTurntable(bufferList);
 			checkLoaded();
@@ -1811,14 +1821,22 @@
 	}
 
 	/**
-	 * Call Masonry on the initial grid.
+	 * Call Masonry on the initial grid if it exists.
 	 */
 	function initGridLayout(callback) {
+		// 确保网格视图存在
+		if (!views.grid) {
+			if (typeof callback === 'function') {
+				callback();
+			}
+			return;
+		}
+		
 		imagesLoaded(views.grid, function() {
-			new Masonry( '.grid', {
+			new Masonry('.grid', {
 				itemSelector: '.grid__item'
 			});
-			if( typeof callback === 'function' ) {
+			if (typeof callback === 'function') {
 				callback();
 			}
 		});
@@ -1826,9 +1844,7 @@
 
 	function loadTurntableAssets(callback) {
 		new AbbeyLoad([{ 
-			'room1' : 'mp3/room1.mp3',
-			'room2' : 'mp3/room2.mp3',
-			'room3' : 'mp3/room3.mp3',
+			// room音效已移除，只保留noise音效
 			'noise' : 'mp3/noise1.mp3'
 		}], function(bufferList) {
 			if( typeof callback === 'function' ) {
@@ -1841,7 +1857,7 @@
 		// initialize turntable
 		turntable = new Turntable(views.player, {
 			noiseBuffer	: bufferList['noise'],
-			effectBuffers : [bufferList['room1'],bufferList['room2'],bufferList['room3']],
+			effectBuffers : [], // room音效已移除，使用空数组
 			onGoBack : function() {
 				// 检查是否有专辑详情视图的单曲元素，如果没有才直接返回网格视图
 				var singleElements = document.querySelectorAll('.view--single .single');
